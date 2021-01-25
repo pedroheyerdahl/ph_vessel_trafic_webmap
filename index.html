@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>Vessel Traffic - Marine Protected Areas</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/ImportantMarineMammalAreas_2.js"></script>
+        <script src="data/MarineKeyBiodiversityAreas_3.js"></script>
+        <script src="data/MarineProtectedAreas_4.js"></script>
+        <script src="data/Land_5.js"></script>
+        <script src="data/PlannedRoutes_6.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:21, minZoom:1
+        }).fitBounds([[2.7186209654825206,106.84685691861318],[23.354793287935447,142.8376720877525]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            map.setMaxBounds(map.getBounds());
+        }
+        map.createPane('pane_GoogleSatellite_0');
+        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
+        var layer_GoogleSatellite_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 21,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleSatellite_0;
+        map.createPane('pane_HistoricalAISData_1');
+        map.getPane('pane_HistoricalAISData_1').style.zIndex = 401;
+        var img_HistoricalAISData_1 = 'data/HistoricalAISData_1.png';
+        var img_bounds_HistoricalAISData_1 = [[4.199279525808456,107.67679386520174],[21.656586935379273,137.3087718208316]];
+        var layer_HistoricalAISData_1 = new L.imageOverlay(img_HistoricalAISData_1,
+                                              img_bounds_HistoricalAISData_1,
+                                              {pane: 'pane_HistoricalAISData_1'});
+        bounds_group.addLayer(layer_HistoricalAISData_1);
+        map.addLayer(layer_HistoricalAISData_1);
+        function pop_ImportantMarineMammalAreas_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Title</th>\
+                        <td>' + (feature.properties['Title'] !== null ? autolinker.link(feature.properties['Title'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Species</th>\
+                        <td>' + (feature.properties['Species'] !== null ? autolinker.link(feature.properties['Species'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">URL</th>\
+                        <td>' + (feature.properties['URL'] !== null ? autolinker.link(feature.properties['URL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">dist_c</th>\
+                        <td>' + (feature.properties['dist_c'] !== null ? autolinker.link(feature.properties['dist_c'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">MAP_ID</th>\
+                        <td>' + (feature.properties['MAP_ID'] !== null ? autolinker.link(feature.properties['MAP_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_ImportantMarineMammalAreas_2_0(feature) {
+            switch(String(feature.properties['dist_c'])) {
+                case 'Greater than 10 Nautical Miles':
+                    return {
+                pane: 'pane_ImportantMarineMammalAreas_2',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(158,205,211,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Route intersection':
+                    return {
+                pane: 'pane_ImportantMarineMammalAreas_2',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(24,54,79,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_ImportantMarineMammalAreas_2');
+        map.getPane('pane_ImportantMarineMammalAreas_2').style.zIndex = 402;
+        map.getPane('pane_ImportantMarineMammalAreas_2').style['mix-blend-mode'] = 'normal';
+        var layer_ImportantMarineMammalAreas_2 = new L.geoJson(json_ImportantMarineMammalAreas_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_ImportantMarineMammalAreas_2',
+            layerName: 'layer_ImportantMarineMammalAreas_2',
+            pane: 'pane_ImportantMarineMammalAreas_2',
+            onEachFeature: pop_ImportantMarineMammalAreas_2,
+            style: style_ImportantMarineMammalAreas_2_0,
+        });
+        bounds_group.addLayer(layer_ImportantMarineMammalAreas_2);
+        map.addLayer(layer_ImportantMarineMammalAreas_2);
+        function pop_MarineKeyBiodiversityAreas_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Name</th>\
+                        <td>' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">MAP_ID</th>\
+                        <td>' + (feature.properties['MAP_ID'] !== null ? autolinker.link(feature.properties['MAP_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">dist_c</th>\
+                        <td>' + (feature.properties['dist_c'] !== null ? autolinker.link(feature.properties['dist_c'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_MarineKeyBiodiversityAreas_3_0(feature) {
+            switch(String(feature.properties['dist_c'])) {
+                case '1. Route intersection':
+                    return {
+                pane: 'pane_MarineKeyBiodiversityAreas_3',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(127,39,4,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2. Under 2 Nautical Miles':
+                    return {
+                pane: 'pane_MarineKeyBiodiversityAreas_3',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(246,119,34,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3. 2 to 5 Nautical Miles':
+                    return {
+                pane: 'pane_MarineKeyBiodiversityAreas_3',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,172,103,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4. 5 to 10 Nautical Miles':
+                    return {
+                pane: 'pane_MarineKeyBiodiversityAreas_3',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,219,183,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5. Greater than 10 Nautical Miles':
+                    return {
+                pane: 'pane_MarineKeyBiodiversityAreas_3',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,245,235,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_MarineKeyBiodiversityAreas_3');
+        map.getPane('pane_MarineKeyBiodiversityAreas_3').style.zIndex = 403;
+        map.getPane('pane_MarineKeyBiodiversityAreas_3').style['mix-blend-mode'] = 'normal';
+        var layer_MarineKeyBiodiversityAreas_3 = new L.geoJson(json_MarineKeyBiodiversityAreas_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_MarineKeyBiodiversityAreas_3',
+            layerName: 'layer_MarineKeyBiodiversityAreas_3',
+            pane: 'pane_MarineKeyBiodiversityAreas_3',
+            onEachFeature: pop_MarineKeyBiodiversityAreas_3,
+            style: style_MarineKeyBiodiversityAreas_3_0,
+        });
+        bounds_group.addLayer(layer_MarineKeyBiodiversityAreas_3);
+        map.addLayer(layer_MarineKeyBiodiversityAreas_3);
+        function pop_MarineProtectedAreas_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">IUCN_CAT</th>\
+                        <td>' + (feature.properties['IUCN_CAT'] !== null ? autolinker.link(feature.properties['IUCN_CAT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">area_ha</th>\
+                        <td>' + (feature.properties['area_ha'] !== null ? autolinker.link(feature.properties['area_ha'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">name_desig</th>\
+                        <td>' + (feature.properties['name_desig'] !== null ? autolinker.link(feature.properties['name_desig'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">government</th>\
+                        <td>' + (feature.properties['government'] !== null ? autolinker.link(feature.properties['government'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Distance C</th>\
+                        <td>' + (feature.properties['Distance C'] !== null ? autolinker.link(feature.properties['Distance C'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">MAP_ID</th>\
+                        <td>' + (feature.properties['MAP_ID'] !== null ? autolinker.link(feature.properties['MAP_ID'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_MarineProtectedAreas_4_0(feature) {
+            switch(String(feature.properties['Distance C'])) {
+                case '1. Route intersection':
+                    return {
+                pane: 'pane_MarineProtectedAreas_4',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,235,163,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2. Under 2 Nautical Miles':
+                    return {
+                pane: 'pane_MarineProtectedAreas_4',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(150,211,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3. 2 to 5 Nautical Miles':
+                    return {
+                pane: 'pane_MarineProtectedAreas_4',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(91,184,106,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4. 5 to 10 Nautical Miles':
+                    return {
+                pane: 'pane_MarineProtectedAreas_4',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(39,151,78,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5. Greater than 10 Nautical Miles':
+                    return {
+                pane: 'pane_MarineProtectedAreas_4',
+                opacity: 1,
+                color: 'rgba(255,226,121,0.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(0,104,55,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_MarineProtectedAreas_4');
+        map.getPane('pane_MarineProtectedAreas_4').style.zIndex = 404;
+        map.getPane('pane_MarineProtectedAreas_4').style['mix-blend-mode'] = 'normal';
+        var layer_MarineProtectedAreas_4 = new L.geoJson(json_MarineProtectedAreas_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_MarineProtectedAreas_4',
+            layerName: 'layer_MarineProtectedAreas_4',
+            pane: 'pane_MarineProtectedAreas_4',
+            onEachFeature: pop_MarineProtectedAreas_4,
+            style: style_MarineProtectedAreas_4_0,
+        });
+        bounds_group.addLayer(layer_MarineProtectedAreas_4);
+        map.addLayer(layer_MarineProtectedAreas_4);
+        function pop_Land_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ID_0'] !== null ? autolinker.link(feature.properties['ID_0'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ISO'] !== null ? autolinker.link(feature.properties['ISO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_ENGLI'] !== null ? autolinker.link(feature.properties['NAME_ENGLI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_ISO'] !== null ? autolinker.link(feature.properties['NAME_ISO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_FAO'] !== null ? autolinker.link(feature.properties['NAME_FAO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_LOCAL'] !== null ? autolinker.link(feature.properties['NAME_LOCAL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_OBSOL'] !== null ? autolinker.link(feature.properties['NAME_OBSOL'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_VARIA'] !== null ? autolinker.link(feature.properties['NAME_VARIA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_NONLA'] !== null ? autolinker.link(feature.properties['NAME_NONLA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_FRENC'] !== null ? autolinker.link(feature.properties['NAME_FRENC'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_SPANI'] !== null ? autolinker.link(feature.properties['NAME_SPANI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_RUSSI'] !== null ? autolinker.link(feature.properties['NAME_RUSSI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_ARABI'] !== null ? autolinker.link(feature.properties['NAME_ARABI'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['NAME_CHINE'] !== null ? autolinker.link(feature.properties['NAME_CHINE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['WASPARTOF'] !== null ? autolinker.link(feature.properties['WASPARTOF'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CONTAINS'] !== null ? autolinker.link(feature.properties['CONTAINS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['SOVEREIGN'] !== null ? autolinker.link(feature.properties['SOVEREIGN'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ISO2'] !== null ? autolinker.link(feature.properties['ISO2'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['WWW'] !== null ? autolinker.link(feature.properties['WWW'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FIPS'] !== null ? autolinker.link(feature.properties['FIPS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ISON'] !== null ? autolinker.link(feature.properties['ISON'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['VALIDFR'] !== null ? autolinker.link(feature.properties['VALIDFR'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['VALIDTO'] !== null ? autolinker.link(feature.properties['VALIDTO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['EUmember'] !== null ? autolinker.link(feature.properties['EUmember'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Land_5_0() {
+            return {
+                pane: 'pane_Land_5',
+                opacity: 1,
+                color: 'rgba(34,34,34,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(116,160,130,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_Land_5');
+        map.getPane('pane_Land_5').style.zIndex = 405;
+        map.getPane('pane_Land_5').style['mix-blend-mode'] = 'normal';
+        var layer_Land_5 = new L.geoJson(json_Land_5, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_Land_5',
+            layerName: 'layer_Land_5',
+            pane: 'pane_Land_5',
+            onEachFeature: pop_Land_5,
+            style: style_Land_5_0,
+        });
+        bounds_group.addLayer(layer_Land_5);
+        map.addLayer(layer_Land_5);
+        function pop_PlannedRoutes_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">vessel</th>\
+                        <td>' + (feature.properties['vessel'] !== null ? autolinker.link(feature.properties['vessel'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_PlannedRoutes_6_0() {
+            return {
+                pane: 'pane_PlannedRoutes_6',
+                opacity: 1,
+                color: 'rgba(175,183,185,1.0)',
+                dashArray: '1,5',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_PlannedRoutes_6');
+        map.getPane('pane_PlannedRoutes_6').style.zIndex = 406;
+        map.getPane('pane_PlannedRoutes_6').style['mix-blend-mode'] = 'normal';
+        var layer_PlannedRoutes_6 = new L.geoJson(json_PlannedRoutes_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_PlannedRoutes_6',
+            layerName: 'layer_PlannedRoutes_6',
+            pane: 'pane_PlannedRoutes_6',
+            onEachFeature: pop_PlannedRoutes_6,
+            style: style_PlannedRoutes_6_0,
+        });
+        bounds_group.addLayer(layer_PlannedRoutes_6);
+        map.addLayer(layer_PlannedRoutes_6);
+            var title = new L.Control();
+            title.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'info');
+                this.update();
+                return this._div;
+            };
+            title.update = function () {
+                this._div.innerHTML = '<h2>Vessel Traffic - Marine Protected Areas</h2>';
+            };
+            title.addTo(map);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/PlannedRoutes_6.png" /> Planned Routes': layer_PlannedRoutes_6,'<img src="legend/Land_5.png" /> Land': layer_Land_5,'Marine Protected Areas:<br /><table><tr><td style="text-align: center;"><img src="legend/MarineProtectedAreas_4_1Routeintersection0.png" /></td><td>1. Route intersection</td></tr><tr><td style="text-align: center;"><img src="legend/MarineProtectedAreas_4_2Under2NauticalMiles1.png" /></td><td>2. Under 2 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineProtectedAreas_4_32to5NauticalMiles2.png" /></td><td>3. 2 to 5 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineProtectedAreas_4_45to10NauticalMiles3.png" /></td><td>4. 5 to 10 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineProtectedAreas_4_5Greaterthan10NauticalMiles4.png" /></td><td>5. Greater than 10 Nautical Miles</td></tr></table>': layer_MarineProtectedAreas_4,'Marine Key Biodiversity Areas:<br /><table><tr><td style="text-align: center;"><img src="legend/MarineKeyBiodiversityAreas_3_1Routeintersection0.png" /></td><td>1. Route intersection</td></tr><tr><td style="text-align: center;"><img src="legend/MarineKeyBiodiversityAreas_3_2Under2NauticalMiles1.png" /></td><td>2. Under 2 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineKeyBiodiversityAreas_3_32to5NauticalMiles2.png" /></td><td>3. 2 to 5 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineKeyBiodiversityAreas_3_45to10NauticalMiles3.png" /></td><td>4. 5 to 10 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/MarineKeyBiodiversityAreas_3_5Greaterthan10NauticalMiles4.png" /></td><td>5. Greater than 10 Nautical Miles</td></tr></table>': layer_MarineKeyBiodiversityAreas_3,'Important Marine Mammal Areas:<br /><table><tr><td style="text-align: center;"><img src="legend/ImportantMarineMammalAreas_2_Greaterthan10NauticalMiles0.png" /></td><td>Greater than 10 Nautical Miles</td></tr><tr><td style="text-align: center;"><img src="legend/ImportantMarineMammalAreas_2_Routeintersection1.png" /></td><td>Route intersection</td></tr></table>': layer_ImportantMarineMammalAreas_2,"Historical AIS Data": layer_HistoricalAISData_1,"Google Satellite": layer_GoogleSatellite_0,}).addTo(map);L.control.scale({position: 'bottomleft', maxWidth: 100, metric: true, imperial: false, updateWhenIdle: false}).addTo(map);
+        setBounds();
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+        </script>
+    </body>
+</html>
